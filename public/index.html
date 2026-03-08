@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>2025 Loss Scenario Analyzer</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <h1>2025 Loss Scenario Analyzer</h1>
+      <p class="hint">
+        Upload a CSV with columns:
+        <code>Date</code>, <code>Ticker</code>, <code>Shares</code>,
+        <code>Price/Share ($)</code>.
+      </p>
+
+      <div class="panel">
+        <label for="csvFile">CSV file</label>
+        <input id="csvFile" type="file" accept=".csv,text/csv" />
+        <button id="analyzeBtn">Analyze</button>
+      </div>
+
+      <div id="status" class="status"></div>
+      <div id="warnings" class="warnings"></div>
+      <div id="summary"></div>
+      <details id="detailsWrap" class="details-wrap" hidden>
+        <summary>Row-level scenario details</summary>
+        <div id="details"></div>
+      </details>
+
+      <section id="feedbackSection" class="feedback" hidden>
+        <h2>Run Feedback</h2>
+        <p class="hint">Leave notes about this run. Feedback is appended to <code>feedback.log</code>.</p>
+        <textarea id="feedbackInput" rows="4" placeholder="What worked? What should change?"></textarea>
+        <div>
+          <button id="feedbackBtn" type="button">Save Feedback</button>
+        </div>
+        <div id="feedbackStatus" class="status"></div>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

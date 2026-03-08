@@ -1,0 +1,81 @@
+{
+  "totalRowsParsed": 2,
+  "rowsConsidered": 2,
+  "rowsSkippedNot2025": 0,
+  "parseIssues": [],
+  "tickerErrors": [],
+  "scenarioSummaries": [
+    {
+      "thresholdPct": 5,
+      "totalLoss": 0,
+      "saleCount": 0
+    },
+    {
+      "thresholdPct": 10,
+      "totalLoss": 0,
+      "saleCount": 0
+    },
+    {
+      "thresholdPct": 15,
+      "totalLoss": 0,
+      "saleCount": 0
+    },
+    {
+      "thresholdPct": 20,
+      "totalLoss": 0,
+      "saleCount": 0
+    }
+  ],
+  "rowResults": [
+    {
+      "rowNum": 2,
+      "date": "2025-02-10",
+      "ticker": "NVDA",
+      "shares": 4,
+      "purchasePrice": 120,
+      "scenarios": {
+        "5": {
+          "triggered": false,
+          "thresholdPct": 5
+        },
+        "10": {
+          "triggered": false,
+          "thresholdPct": 10
+        },
+        "15": {
+          "triggered": false,
+          "thresholdPct": 15
+        },
+        "20": {
+          "triggered": false,
+          "thresholdPct": 20
+        }
+      }
+    },
+    {
+      "rowNum": 3,
+      "date": "2025-03-01",
+      "ticker": "TSLA",
+      "shares": 3,
+      "purchasePrice": 200,
+      "scenarios": {
+        "5": {
+          "triggered": false,
+          "thresholdPct": 5
+        },
+        "10": {
+          "triggered": false,
+          "thresholdPct": 10
+        },
+        "15": {
+          "triggered": false,
+          "thresholdPct": 15
+        },
+        "20": {
+          "triggered": false,
+          "thresholdPct": 20
+        }
+      }
+    }
+  ]
+}

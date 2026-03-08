@@ -1,0 +1,125 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Avenir Next", "Segoe UI", sans-serif;
+  background: linear-gradient(140deg, #f4f7fb 0%, #e8eefc 100%);
+  color: #12243a;
+}
+
+.container {
+  width: min(980px, 92vw);
+  margin: 2rem auto;
+}
+
+h1 {
+  margin: 0 0 0.75rem;
+}
+
+.hint {
+  margin-top: 0;
+  color: #2f4766;
+}
+
+.panel {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+  background: #fff;
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid #d0dcf1;
+}
+
+button {
+  background: #114f9b;
+  color: #fff;
+  border: 0;
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.status {
+  margin-top: 1rem;
+  font-weight: 600;
+}
+
+.warnings {
+  margin-top: 0.5rem;
+  color: #7b2f22;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  background: #fff;
+  border: 1px solid #d0dcf1;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+th,
+td {
+  border-bottom: 1px solid #e1e8f7;
+  padding: 0.65rem;
+  text-align: left;
+}
+
+th {
+  background: #e7efff;
+}
+
+.details-wrap {
+  margin-top: 1rem;
+}
+
+.feedback {
+  margin-top: 1rem;
+  background: #fff;
+  border: 1px solid #d0dcf1;
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.feedback h2 {
+  margin-top: 0;
+}
+
+.feedback textarea {
+  width: 100%;
+  margin: 0.5rem 0 0.75rem;
+  padding: 0.6rem;
+  border: 1px solid #c5d3ec;
+  border-radius: 8px;
+  font: inherit;
+}
+
+.meta {
+  margin-top: 1rem;
+  color: #2f4766;
+}
+
+.tax-summary {
+  margin-top: 1rem;
+}
+
+.tax-summary h3 {
+  margin: 0.25rem 0 0.5rem;
+}
+
+@media (max-width: 680px) {
+  th,
+  td {
+    font-size: 0.9rem;
+  }
+}

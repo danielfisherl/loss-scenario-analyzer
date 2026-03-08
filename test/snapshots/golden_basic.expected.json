@@ -1,0 +1,93 @@
+{
+  "totalRowsParsed": 3,
+  "rowsConsidered": 2,
+  "rowsSkippedNot2025": 1,
+  "parseIssues": [],
+  "tickerErrors": [],
+  "scenarioSummaries": [
+    {
+      "thresholdPct": 5,
+      "totalLoss": 50,
+      "saleCount": 1
+    },
+    {
+      "thresholdPct": 10,
+      "totalLoss": 100,
+      "saleCount": 1
+    },
+    {
+      "thresholdPct": 15,
+      "totalLoss": 151,
+      "saleCount": 1
+    },
+    {
+      "thresholdPct": 20,
+      "totalLoss": 200,
+      "saleCount": 1
+    }
+  ],
+  "rowResults": [
+    {
+      "rowNum": 2,
+      "date": "2025-01-02",
+      "ticker": "AAPL",
+      "shares": 10,
+      "purchasePrice": 100,
+      "scenarios": {
+        "5": {
+          "triggered": true,
+          "thresholdPct": 5,
+          "sellDate": "2025-01-03",
+          "sellPrice": 95,
+          "loss": 50
+        },
+        "10": {
+          "triggered": true,
+          "thresholdPct": 10,
+          "sellDate": "2025-01-06",
+          "sellPrice": 90,
+          "loss": 100
+        },
+        "15": {
+          "triggered": true,
+          "thresholdPct": 15,
+          "sellDate": "2025-01-07",
+          "sellPrice": 84.9,
+          "loss": 151
+        },
+        "20": {
+          "triggered": true,
+          "thresholdPct": 20,
+          "sellDate": "2025-01-08",
+          "sellPrice": 80,
+          "loss": 200
+        }
+      }
+    },
+    {
+      "rowNum": 3,
+      "date": "2025-01-02",
+      "ticker": "MSFT",
+      "shares": 2,
+      "purchasePrice": 200,
+      "scenarios": {
+        "5": {
+          "triggered": false,
+          "thresholdPct": 5
+        },
+        "10": {
+          "triggered": false,
+          "thresholdPct": 10
+        },
+        "15": {
+          "triggered": false,
+          "thresholdPct": 15
+        },
+        "20": {
+          "triggered": false,
+          "thresholdPct": 20
+        }
+      }
+    }
+  ]
+}
