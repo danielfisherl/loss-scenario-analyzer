@@ -13,7 +13,11 @@ function makeFetchMock(configBySymbol) {
 
   async function fetchMock(url) {
     const parsed = new URL(url);
-    const symbol = parsed.searchParams.get("s");
+    let symbol = parsed.searchParams.get("s");
+    if (!symbol && parsed.hostname.includes("finance.yahoo.com")) {
+      const parts = parsed.pathname.split("/");
+      symbol = parts[parts.length - 1] || null;
+    }
     calls.set(symbol, (calls.get(symbol) || 0) + 1);
 
     const config = configBySymbol[symbol];
@@ -47,6 +51,27 @@ function makeFetchMock(configBySymbol) {
       status: 200,
       async text() {
         return body;
+      },
+      async json() {
+        if (config.json) {
+          return config.json;
+        }
+        const timestamps = (config.rows || []).map((r) =>
+          Math.floor(new Date(r.date).getTime() / 1000)
+        );
+        const closes = (config.rows || []).map((r) => r.close);
+        return {
+          chart: {
+            result: [
+              {
+                timestamp: timestamps,
+                indicators: {
+                  quote: [{ close: closes }],
+                },
+              },
+            ],
+          },
+        };
       },
     };
   }

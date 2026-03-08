@@ -147,6 +147,28 @@ test("rounds per-row losses and summarized totals to 2 decimals", async () => {
   );
 });
 
+test("falls back to Yahoo data when Stooq is unavailable", async () => {
+  const csv = [
+    "Date,Ticker,Shares,Price/Share ($)",
+    "2025-01-02,VTI,1,100",
+  ].join("\n");
+  const fetchMock = makeFetchMock({
+    "vti.us": { status: 503 },
+    VTI: {
+      rows: [
+        { date: "2025-01-02", close: 100 },
+        { date: "2025-01-03", close: 90 },
+      ],
+    },
+  });
+  const result = await analyze(csv, { fetchImpl: fetchMock });
+
+  assert.equal(result.tickerErrors.length, 0);
+  assert.equal(result.scenarioSummaries[0].saleCount, 1);
+  assert.equal(fetchMock.calls.get("vti.us"), 1);
+  assert.equal(fetchMock.calls.get("VTI"), 1);
+});
+
 test("golden snapshot: basic mixed-year and thresholds", async () => {
   const csv = await loadFixture("golden_basic.csv");
   const fetchMock = makeFetchMock(baseMarketDataConfig());

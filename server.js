@@ -91,7 +91,29 @@ function normalizeTickerForStooq(rawTicker) {
   return `${ticker.replace(/\./g, "-")}.us`;
 }
 
-async function fetchTickerHistory(rawTicker, fetchImpl = fetch) {
+function normalizeTickerForYahoo(rawTicker) {
+  const ticker = String(rawTicker).trim().toUpperCase();
+  if (!ticker) {
+    return null;
+  }
+  return ticker.replace(/\./g, "-");
+}
+
+function normalizeHistoryRows(rows) {
+  const data = [];
+  for (const row of rows) {
+    const date = toIsoDate(row.date);
+    const close = Number(row.close);
+    if (!date || Number.isNaN(close)) {
+      continue;
+    }
+    data.push({ date, close });
+  }
+  data.sort((a, b) => (a.date < b.date ? -1 : 1));
+  return data;
+}
+
+async function fetchTickerHistoryFromStooq(rawTicker, fetchImpl = fetch) {
   const symbol = normalizeTickerForStooq(rawTicker);
   if (!symbol) {
     throw new Error("Empty ticker");
@@ -120,19 +142,77 @@ async function fetchTickerHistory(rawTicker, fetchImpl = fetch) {
     throw new Error("Invalid historical data format");
   }
 
-  const data = [];
+  const rowsOut = [];
   for (let i = 1; i < rows.length; i += 1) {
     const r = rows[i];
-    const date = toIsoDate(r[dateIdx]);
-    const close = Number(r[closeIdx]);
-    if (!date || Number.isNaN(close)) {
-      continue;
-    }
-    data.push({ date, close });
+    rowsOut.push({ date: r[dateIdx], close: r[closeIdx] });
+  }
+  const data = normalizeHistoryRows(rowsOut);
+  if (!data.length) {
+    throw new Error("Insufficient historical data");
+  }
+  return data;
+}
+
+async function fetchTickerHistoryFromYahoo(rawTicker, fetchImpl = fetch) {
+  const symbol = normalizeTickerForYahoo(rawTicker);
+  if (!symbol) {
+    throw new Error("Empty ticker");
   }
 
-  data.sort((a, b) => (a.date < b.date ? -1 : 1));
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(
+    symbol
+  )}?interval=1d&range=max`;
+  const res = await fetchImpl(url);
+  if (!res.ok) {
+    throw new Error(`Failed price fetch (${res.status})`);
+  }
+  const json = await res.json();
+  const result = json?.chart?.result?.[0];
+  const timestamps = result?.timestamp;
+  const closes = result?.indicators?.quote?.[0]?.close;
+
+  if (!Array.isArray(timestamps) || !Array.isArray(closes) || !timestamps.length) {
+    throw new Error("No historical data returned");
+  }
+
+  const rows = [];
+  for (let i = 0; i < timestamps.length; i += 1) {
+    const ts = Number(timestamps[i]);
+    const close = closes[i];
+    if (Number.isNaN(ts)) {
+      continue;
+    }
+    const date = new Date(ts * 1000).toISOString().slice(0, 10);
+    rows.push({ date, close });
+  }
+
+  const data = normalizeHistoryRows(rows);
+  if (!data.length) {
+    throw new Error("Insufficient historical data");
+  }
   return data;
+}
+
+async function fetchTickerHistory(rawTicker, fetchImpl = fetch) {
+  try {
+    const data = await fetchTickerHistoryFromStooq(rawTicker, fetchImpl);
+    return { data, source: "stooq" };
+  } catch (stooqErr) {
+    console.error(
+      `[price-fetch] source=stooq ticker=${rawTicker} error=${stooqErr.message}`
+    );
+    try {
+      const data = await fetchTickerHistoryFromYahoo(rawTicker, fetchImpl);
+      console.log(`[price-fetch] source=yahoo ticker=${rawTicker} status=fallback-success`);
+      return { data, source: "yahoo" };
+    } catch (yahooErr) {
+      console.error(
+        `[price-fetch] source=yahoo ticker=${rawTicker} error=${yahooErr.message}`
+      );
+      throw stooqErr;
+    }
+  }
 }
 
 function parseTrades(csvText) {
@@ -220,9 +300,14 @@ async function analyze(csvText, options = {}) {
     let history = historyCache.get(trade.ticker);
     if (!history) {
       try {
-        history = await fetchTickerHistory(trade.ticker, fetchImpl);
+        const { data, source } = await fetchTickerHistory(trade.ticker, fetchImpl);
+        history = data;
         historyCache.set(trade.ticker, history);
+        if (source !== "stooq") {
+          console.log(`[analysis] ticker=${trade.ticker} source=${source}`);
+        }
       } catch (err) {
+        console.error(`[analysis] ticker=${trade.ticker} error=${err.message}`);
         tickerErrors.push(`${trade.ticker}: ${err.message}`);
         historyCache.set(trade.ticker, []);
         history = [];
@@ -304,6 +389,7 @@ function createRequestHandler(options = {}) {
 
   return async function requestHandler(req, res) {
     if (req.method === "POST" && req.url === "/api/analyze") {
+      console.log("[request] POST /api/analyze");
       let body = "";
       req.on("data", (chunk) => {
         body += chunk.toString();
@@ -320,7 +406,11 @@ function createRequestHandler(options = {}) {
           }
           const result = await analyze(payload.csv, { fetchImpl });
           sendJson(res, 200, result);
+          console.log(
+            `[request] POST /api/analyze complete rowsConsidered=${result.rowsConsidered}`
+          );
         } catch (err) {
+          console.error(`[request] POST /api/analyze error=${err.message}`);
           sendJson(res, 400, { error: err.message || "Invalid request" });
         }
       });

@@ -57,6 +57,6 @@ These values are directional estimates only and not tax advice.
 
 ## Notes
 
-- Historical daily prices are fetched from Stooq at analysis time.
+- Historical daily prices are fetched from Stooq, with Yahoo Finance as automatic fallback if Stooq fails.
 - If a ticker cannot be fetched, it will appear in warnings and those rows will not trigger sales.
 - Tickers without an exchange suffix are treated as U.S. symbols (e.g., `AAPL` -> `aapl.us`).
