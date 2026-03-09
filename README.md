@@ -58,5 +58,7 @@ These values are directional estimates only and not tax advice.
 ## Notes
 
 - Historical daily prices are fetched from Stooq, with Yahoo Finance as automatic fallback if Stooq fails.
+- Yahoo fallback includes automatic retry/backoff on rate-limit responses (`429`).
+- Ticker price history is cached in memory (24h TTL, bounded entry count) to reduce repeated provider requests.
 - If a ticker cannot be fetched, it will appear in warnings and those rows will not trigger sales.
 - Tickers without an exchange suffix are treated as U.S. symbols (e.g., `AAPL` -> `aapl.us`).

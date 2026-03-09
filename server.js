@@ -7,6 +7,11 @@ const ROOT = __dirname;
 const FEEDBACK_FILE = path.join(ROOT, "feedback.log");
 
 const SCENARIOS = [0.05, 0.1, 0.15, 0.2];
+const PRICE_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+const PRICE_CACHE_MAX_ENTRIES = 100;
+const YAHOO_MAX_RETRIES = 3;
+const YAHOO_BASE_DELAY_MS = 500;
+const PRICE_CACHE = new Map();
 
 function parseCsv(text) {
   const rows = [];
@@ -99,6 +104,82 @@ function normalizeTickerForYahoo(rawTicker) {
   return ticker.replace(/\./g, "-");
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function prunePriceCache() {
+  while (PRICE_CACHE.size > PRICE_CACHE_MAX_ENTRIES) {
+    const oldestKey = PRICE_CACHE.keys().next().value;
+    PRICE_CACHE.delete(oldestKey);
+  }
+}
+
+function getCachedPriceHistory(ticker) {
+  const key = String(ticker || "").toUpperCase();
+  const cached = PRICE_CACHE.get(key);
+  if (!cached) {
+    return null;
+  }
+  if (Date.now() - cached.fetchedAt > PRICE_CACHE_TTL_MS) {
+    PRICE_CACHE.delete(key);
+    return null;
+  }
+  return cached;
+}
+
+function setCachedPriceHistory(ticker, data, source) {
+  const key = String(ticker || "").toUpperCase();
+  if (!key) {
+    return;
+  }
+  PRICE_CACHE.delete(key);
+  PRICE_CACHE.set(key, {
+    data,
+    source,
+    fetchedAt: Date.now(),
+  });
+  prunePriceCache();
+}
+
+async function fetchWithRetry(url, fetchImpl, options = {}) {
+  const maxRetries = options.maxRetries || 0;
+  const baseDelayMs = options.baseDelayMs || 250;
+  const shouldRetry =
+    options.shouldRetry ||
+    (() => false);
+
+  let attempt = 0;
+  while (attempt <= maxRetries) {
+    let res;
+    let err;
+    try {
+      res = await fetchImpl(url);
+      if (!shouldRetry({ res, attempt })) {
+        return res;
+      }
+    } catch (error) {
+      err = error;
+      if (!shouldRetry({ err, attempt })) {
+        throw error;
+      }
+    }
+
+    const nextAttempt = attempt + 1;
+    if (nextAttempt > maxRetries) {
+      if (err) {
+        throw err;
+      }
+      return res;
+    }
+
+    const waitMs = baseDelayMs * 2 ** attempt;
+    await sleep(waitMs);
+    attempt = nextAttempt;
+  }
+  throw new Error("Unexpected retry failure");
+}
+
 function normalizeHistoryRows(rows) {
   const data = [];
   for (const row of rows) {
@@ -163,7 +244,19 @@ async function fetchTickerHistoryFromYahoo(rawTicker, fetchImpl = fetch) {
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(
     symbol
   )}?interval=1d&range=max`;
-  const res = await fetchImpl(url);
+  const res = await fetchWithRetry(url, fetchImpl, {
+    maxRetries: YAHOO_MAX_RETRIES,
+    baseDelayMs: YAHOO_BASE_DELAY_MS,
+    shouldRetry: ({ res, err, attempt }) => {
+      if (attempt >= YAHOO_MAX_RETRIES) {
+        return false;
+      }
+      if (err && /fetch failed|network|timed out/i.test(String(err.message || ""))) {
+        return true;
+      }
+      return Boolean(res && res.status === 429);
+    },
+  });
   if (!res.ok) {
     throw new Error(`Failed price fetch (${res.status})`);
   }
@@ -195,8 +288,14 @@ async function fetchTickerHistoryFromYahoo(rawTicker, fetchImpl = fetch) {
 }
 
 async function fetchTickerHistory(rawTicker, fetchImpl = fetch) {
+  const cached = getCachedPriceHistory(rawTicker);
+  if (cached) {
+    return { data: cached.data, source: "cache" };
+  }
+
   try {
     const data = await fetchTickerHistoryFromStooq(rawTicker, fetchImpl);
+    setCachedPriceHistory(rawTicker, data, "stooq");
     return { data, source: "stooq" };
   } catch (stooqErr) {
     console.error(
@@ -205,11 +304,15 @@ async function fetchTickerHistory(rawTicker, fetchImpl = fetch) {
     try {
       const data = await fetchTickerHistoryFromYahoo(rawTicker, fetchImpl);
       console.log(`[price-fetch] source=yahoo ticker=${rawTicker} status=fallback-success`);
+      setCachedPriceHistory(rawTicker, data, "yahoo");
       return { data, source: "yahoo" };
     } catch (yahooErr) {
       console.error(
         `[price-fetch] source=yahoo ticker=${rawTicker} error=${yahooErr.message}`
       );
+      if (String(yahooErr.message || "").includes("(429)")) {
+        throw new Error("Rate limited by price data provider (HTTP 429)");
+      }
       throw stooqErr;
     }
   }
@@ -480,6 +583,7 @@ if (require.main === module) {
 
 module.exports = {
   analyze,
+  clearPriceHistoryCache: () => PRICE_CACHE.clear(),
   createRequestHandler,
   createServer,
   parseCsv,

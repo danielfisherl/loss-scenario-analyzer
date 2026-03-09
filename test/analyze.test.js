@@ -3,7 +3,7 @@ const fs = require("node:fs/promises");
 const path = require("node:path");
 const test = require("node:test");
 
-const { analyze } = require("../server");
+const { analyze, clearPriceHistoryCache } = require("../server");
 const { makeFetchMock } = require("../testsupport/test-helpers");
 
 function baseMarketDataConfig() {
@@ -61,6 +61,10 @@ async function loadSnapshot(name) {
   const raw = await fs.readFile(p, "utf8");
   return JSON.parse(raw);
 }
+
+test.beforeEach(() => {
+  clearPriceHistoryCache();
+});
 
 test("filters to 2025 and triggers first-hit sale dates per threshold", async () => {
   const csv = await loadFixture("golden_basic.csv");
@@ -167,6 +171,22 @@ test("falls back to Yahoo data when Stooq is unavailable", async () => {
   assert.equal(result.scenarioSummaries[0].saleCount, 1);
   assert.equal(fetchMock.calls.get("vti.us"), 1);
   assert.equal(fetchMock.calls.get("VTI"), 1);
+});
+
+test("returns rate-limit warning when fallback provider responds with 429", async () => {
+  const csv = [
+    "Date,Ticker,Shares,Price/Share ($)",
+    "2025-01-02,VOO,1,100",
+  ].join("\n");
+  const fetchMock = makeFetchMock({
+    "voo.us": { status: 503 },
+    VOO: { status: 429 },
+  });
+  const result = await analyze(csv, { fetchImpl: fetchMock });
+
+  assert.deepEqual(result.tickerErrors, [
+    "VOO: Rate limited by price data provider (HTTP 429)",
+  ]);
 });
 
 test("golden snapshot: basic mixed-year and thresholds", async () => {
