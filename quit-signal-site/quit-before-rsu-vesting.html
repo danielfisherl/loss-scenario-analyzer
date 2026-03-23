@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Should You Quit Before RSU Vesting? | QuitSignal</title>
+  <meta name="description" content="A practical decision framework for tech workers comparing RSU vest value, runway, and risk before quitting." />
+  <meta property="og:title" content="Should You Quit Before RSU Vesting?" />
+  <meta property="og:description" content="Compare vesting value versus personal runway to make a better quit decision." />
+  <meta property="og:type" content="article" />
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+  <header>
+    <div class="container nav">
+      <a class="brand" href="index.html">Quit<span>Signal</span></a>
+      <nav class="nav-links" aria-label="Main navigation">
+        <a href="calculator.html">Calculator</a>
+        <a href="how-much-savings-to-quit-tech-job.html">Savings Guide</a>
+        <a href="quit-before-rsu-vesting.html" aria-current="page">RSU Guide</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container section article">
+    <article class="card">
+      <span class="kicker">RSU Tradeoff Guide</span>
+      <h1>Should You Quit Before RSU Vesting?</h1>
+      <p>For many high-income tech workers, quitting is not just a salary decision. It is often a vesting decision. A good call balances financial value with personal sustainability.</p>
+
+      <h2>The Core Tradeoff</h2>
+      <p>You are weighing immediate freedom against expected vest value.</p>
+      <p><strong>Wait Value = expected after-tax vest amount - personal cost of staying</strong></p>
+      <p>If wait value is small and runway is strong, quitting sooner can still be rational.</p>
+
+      <h2>Estimate Vest Value Realistically</h2>
+      <ul class="list">
+        <li>Count shares likely to vest in the next event.</li>
+        <li>Apply a downside haircut to current price.</li>
+        <li>Adjust for taxes and withholding.</li>
+        <li>Discount by probability you stay until vest date.</li>
+      </ul>
+
+      <h2>Decision Rules</h2>
+      <ul class="list">
+        <li><strong>Usually wait:</strong> vest is in 1-3 months and runway is under 12 months.</li>
+        <li><strong>Usually flexible:</strong> runway is 18+ months and vest value is less than 10% of liquid runway.</li>
+        <li><strong>Usually quit now:</strong> staying has meaningful health or performance downside.</li>
+      </ul>
+
+      <h2>Example</h2>
+      <p>Suppose near-term unvested value is $60,000. After taxes it may be around $36,000. If your stay probability is 90%, expected value is about $32,400. Compare that number with your personal cost of waiting.</p>
+
+      <h2>Variables People Miss</h2>
+      <ul class="list">
+        <li>Reorg or performance risk before vest date.</li>
+        <li>Market risk in the stock price itself.</li>
+        <li>Insurance gap after leaving.</li>
+        <li>Time needed to land an equivalent role.</li>
+      </ul>
+
+      <div class="notice">Run both scenarios in the calculator: quit now vs quit after next vest.</div>
+
+      <p><a class="btn btn-primary" href="calculator.html">Run the Quit Calculator</a></p>
+
+      <p class="disclaimer">Educational information only, not financial, investment, tax, or legal advice.</p>
+    </article>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>© <span id="year"></span> QuitSignal. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

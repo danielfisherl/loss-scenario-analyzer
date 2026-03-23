@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quit Job Calculator for Tech Workers | QuitSignal</title>
+  <meta name="description" content="Free quit-job calculator for high-income tech workers. Model runway, healthcare changes, and RSU tradeoffs before resigning." />
+  <meta property="og:title" content="Quit Job Calculator for Tech Workers" />
+  <meta property="og:description" content="Estimate your runway and safer quit timing with this free calculator." />
+  <meta property="og:type" content="website" />
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+  <header>
+    <div class="container nav">
+      <a class="brand" href="index.html">Quit<span>Signal</span></a>
+      <nav class="nav-links" aria-label="Main navigation">
+        <a href="calculator.html" aria-current="page">Calculator</a>
+        <a href="how-much-savings-to-quit-tech-job.html">Savings Guide</a>
+        <a href="quit-before-rsu-vesting.html">RSU Guide</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container section">
+    <article class="hero-card">
+      <span class="kicker">Free Tool</span>
+      <h1>Can I Afford to Quit My Tech Job?</h1>
+      <p class="lead">Built for people earning around $200k to $800k total comp. Add your numbers to see runway, risk, and whether waiting until next vest could materially improve your decision.</p>
+      <p class="disclaimer">Educational use only. Not financial, tax, or legal advice.</p>
+    </article>
+
+    <section class="section card">
+      <form id="quit-calculator-form">
+        <div class="form-grid">
+          <div>
+            <label for="savings">Cash savings available ($)</label>
+            <input id="savings" name="savings" type="number" value="120000" min="0" step="100" required />
+          </div>
+          <div>
+            <label for="spendNow">Monthly spending now ($)</label>
+            <input id="spendNow" name="spendNow" type="number" value="9000" min="0" step="100" required />
+          </div>
+          <div>
+            <label for="spendQuit">Monthly spending after quitting ($)</label>
+            <input id="spendQuit" name="spendQuit" type="number" value="7000" min="0" step="100" required />
+          </div>
+          <div>
+            <label for="otherIncome">Other household monthly income ($)</label>
+            <input id="otherIncome" name="otherIncome" type="number" value="3000" min="0" step="100" />
+          </div>
+          <div>
+            <label for="severance">Severance after tax ($)</label>
+            <input id="severance" name="severance" type="number" value="0" min="0" step="100" />
+          </div>
+          <div>
+            <label for="oneTime">One-time quitting costs ($)</label>
+            <input id="oneTime" name="oneTime" type="number" value="4000" min="0" step="100" />
+          </div>
+          <div>
+            <label for="healthDelta">Extra monthly healthcare cost ($)</label>
+            <input id="healthDelta" name="healthDelta" type="number" value="1200" min="0" step="50" />
+          </div>
+          <div>
+            <label for="breakIncome">Expected monthly break income ($)</label>
+            <input id="breakIncome" name="breakIncome" type="number" value="1500" min="0" step="100" />
+          </div>
+          <div>
+            <label for="reemploymentMonths">Months until likely re-employment</label>
+            <input id="reemploymentMonths" name="reemploymentMonths" type="number" value="6" min="0" step="1" />
+          </div>
+          <div>
+            <label for="unvestedEquity">Unvested equity forfeited if you quit now ($)</label>
+            <input id="unvestedEquity" name="unvestedEquity" type="number" value="50000" min="0" step="100" />
+          </div>
+          <div>
+            <label for="vestMonths">Months until next vest event</label>
+            <input id="vestMonths" name="vestMonths" type="number" value="2" min="0" step="1" />
+          </div>
+          <div>
+            <label for="riskTolerance">Risk tolerance</label>
+            <select id="riskTolerance" name="riskTolerance">
+              <option>Conservative</option>
+              <option selected>Balanced</option>
+              <option>Aggressive</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-primary" type="submit">Calculate My Runway</button>
+          <a class="btn" href="how-much-savings-to-quit-tech-job.html">Read savings guide</a>
+        </div>
+      </form>
+    </section>
+
+    <section id="results" class="section card" hidden></section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>© <span id="year"></span> QuitSignal. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="assets/calculator.js"></script>
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
