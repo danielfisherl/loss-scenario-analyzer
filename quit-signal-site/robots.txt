@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://YOUR-USERNAME.github.io/YOUR-REPO-NAME/sitemap.xml
+Sitemap: https://danielfisherl.github.io/loss-scenario-analyzer/quit-signal-site/sitemap.xml
