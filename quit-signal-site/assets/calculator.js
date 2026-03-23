@@ -39,11 +39,14 @@
     if (window.console && window.console.log) {
       window.console.log('analytics-event', name, data || {});
     }
+    if (typeof window.gtag === 'function') {
+      window.gtag('event', name, data || {});
+    }
   };
 
   form.addEventListener('submit', (e) => {
     e.preventDefault();
-    event('calc_started');
+    event('calculator_start');
 
     const data = {
       savings: safeNumber(form.savings.value),
@@ -129,7 +132,7 @@
     results.hidden = false;
     results.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-    event('calc_completed', {
+    event('calculator_complete', {
       runwayLean,
       runwayCurrent,
       decision,
