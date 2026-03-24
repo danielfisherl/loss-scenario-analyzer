@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quit Job Calculator for Tech Workers | QuitSignal</title>
-  <meta name="description" content="Free quit-job calculator for high-income tech workers. Model runway, healthcare changes, and RSU tradeoffs before resigning." />
+  <title>Quit Job Decision Engine | QuitSignal</title>
+  <meta name="description" content="A structured quit-job decision engine for high-income tech workers comparing runway, readiness, and tradeoffs before resigning." />
   <meta name="google-site-verification" content="ATL7WBlsLVhYbYMvm219HI0vVKNjLWPbxOhCevAr54M" />
-  <meta property="og:title" content="Quit Job Calculator for Tech Workers" />
-  <meta property="og:description" content="Estimate your runway and safer quit timing with this free calculator." />
+  <meta property="og:title" content="Quit Job Decision Engine" />
+  <meta property="og:description" content="Estimate your runway and interpret whether now is the right time to quit." />
   <meta property="og:type" content="website" />
   <link rel="stylesheet" href="assets/styles.css" />
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-5RQ72BPTV1"></script>
@@ -36,7 +36,8 @@
     <article class="hero-card">
       <span class="kicker">Free Tool</span>
       <h1>Can I Afford to Quit My Tech Job?</h1>
-      <p class="lead">Built for people earning around $200k to $800k total comp. Add your numbers to see runway, risk, and whether waiting until next vest could materially improve your decision.</p>
+      <p class="lead">Built for high-earning tech workers who want more than a months-left answer. Add your numbers to see runway, risk, and whether waiting until the next vest or bonus meaningfully changes the call.</p>
+      <p class="lead">The output is a decision signal, not a prediction. It is meant to make the tradeoffs legible enough to act on.</p>
       <p class="disclaimer">Educational use only. Not financial, tax, or legal advice.</p>
     </article>
 
@@ -98,13 +99,13 @@
         </div>
 
         <div class="actions">
-          <button class="btn btn-primary" type="submit">Calculate My Runway</button>
-          <a class="btn" href="how-much-savings-to-quit-tech-job.html">Read savings guide</a>
+          <button class="btn btn-primary" type="submit">Run Your Numbers</button>
+          <a class="btn" href="articles/index.html">Read the guides</a>
         </div>
       </form>
     </section>
 
-    <section id="results" class="section card" hidden></section>
+    <section id="results" class="section card" hidden aria-live="polite" aria-atomic="true"></section>
 
     <section class="section card article">
       <span class="kicker">Common Questions</span>

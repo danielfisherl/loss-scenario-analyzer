@@ -73,32 +73,141 @@
 
     const equityCost = data.unvestedEquity;
     const equityShare = effectiveCash > 0 ? equityCost / effectiveCash : 1;
+    const toleranceMap = {
+      Conservative: {
+        strongRunway: 21,
+        strongCurrent: 14,
+        possibleRunway: 11,
+        possibleCurrent: 6,
+        equityStrong: 0.1,
+        equityPressure: 0.18,
+        vestSoonMonths: 3
+      },
+      Balanced: {
+        strongRunway: 18,
+        strongCurrent: 12,
+        possibleRunway: 9,
+        possibleCurrent: 5,
+        equityStrong: 0.12,
+        equityPressure: 0.2,
+        vestSoonMonths: 3
+      },
+      Aggressive: {
+        strongRunway: 15,
+        strongCurrent: 10,
+        possibleRunway: 8,
+        possibleCurrent: 5,
+        equityStrong: 0.15,
+        equityPressure: 0.22,
+        vestSoonMonths: 2
+      }
+    };
+    const thresholds = toleranceMap[data.riskTolerance] || toleranceMap.Balanced;
 
-    let risk = 'Low';
-    if (runwayLean < 9 || data.healthDelta > data.spendQuit * 0.25) {
-      risk = 'High';
-    } else if (runwayLean < 18) {
-      risk = 'Medium';
-    }
+    // Result-state rules are intentionally simple and editable:
+    // - Strong quit signal: comfortable runway, comfortable current-spend runway, and no near-term equity pressure.
+    // - Possible but risky: runway exists, but the margin is thin or vesting/bonus timing still matters.
+    // - Not yet: runway is too short to absorb the uncertainty.
+    const nearTermVestPressure = data.vestMonths <= thresholds.vestSoonMonths && equityShare >= thresholds.equityPressure;
+    const strongSignal =
+      runwayLean >= thresholds.strongRunway &&
+      runwayCurrent >= thresholds.strongCurrent &&
+      equityShare < thresholds.equityStrong &&
+      !nearTermVestPressure;
 
-    if (data.riskTolerance === 'Conservative' && risk === 'Low' && runwayLean < 24) {
-      risk = 'Medium';
-    }
-    if (data.riskTolerance === 'Aggressive' && risk === 'Medium' && runwayLean >= 14) {
-      risk = 'Low';
-    }
+    const possibleSignal =
+      !strongSignal &&
+      runwayLean >= thresholds.possibleRunway &&
+      runwayCurrent >= thresholds.possibleCurrent;
 
-    let decision = 'Now';
-    if (runwayLean < 9) {
-      decision = 'Not yet';
-    } else if (runwayLean < 18 || (data.vestMonths <= data.reemploymentMonths && equityShare > 0.1)) {
-      decision = 'Wait until next vest';
-    }
+    const signalKey = strongSignal ? 'strong' : possibleSignal ? 'risky' : 'notyet';
 
-    const riskClass = risk.toLowerCase();
+    const signalCopy = {
+      strong: {
+        label: 'Strong quit signal',
+        short: 'Your numbers suggest you have enough room to leave without forcing a rushed decision.',
+        long: 'This does not guarantee the exit will feel easy, but it does mean the financial side is not doing the heavy lifting. The main question becomes timing: when you leave, what pace you want to search at, and how much margin you want to preserve.'
+      },
+      risky: {
+        label: 'Possible but risky',
+        short: 'You can probably make this work, but the margin is thin enough that timing still matters.',
+        long: 'This is the zone where people can afford the move but still feel uneasy about it. A bonus, vest, or a small expense change can move the answer. If you leave here, do it with a plan instead of a guess.'
+      },
+      notyet: {
+        label: 'Not yet',
+        short: 'The current numbers leave too little slack to make the decision comfortably.',
+        long: 'The output is saying the exit is still too dependent on optimistic assumptions. That usually means the next move is to reduce burn, extend the timeline, or wait for a better timing window rather than trying to force certainty.'
+      }
+    };
+
+    const monthsSaved = Math.max(0, runwayLean - runwayCurrent);
+    const monthlyFlex = leanBurn > 0 ? 1000 / leanBurn : 99;
+    const constraint = (() => {
+      if (nearTermVestPressure) {
+        return 'near-term vesting';
+      }
+      if (runwayLean < thresholds.possibleRunway) {
+        return 'monthly burn';
+      }
+      if (data.healthDelta > data.spendQuit * 0.25) {
+        return 'healthcare costs';
+      }
+      if (runwayCurrent < runwayLean && runwayLean >= thresholds.possibleRunway) {
+        return 'spend discipline';
+      }
+      return 'savings buffer';
+    })();
+
+    const insightBullets = [
+      `Moving to your planned post-quit spend gives you about ${formatMonths(monthsSaved)} of extra runway versus staying at current spend.`,
+      `Your main constraint right now is ${constraint}.`,
+      leanBurn > 0
+        ? `Cutting $1,000 a month would add about ${monthlyFlex.toFixed(1)} months of runway.`
+        : 'Your planned break income almost covers the burn, so the decision is less about monthly cash flow.'
+    ];
+
+    const interpretationCopy = {
+      strong: [
+        'You are trading money for time, but the gap is wide enough that the decision is mostly about preference and timing.',
+        'This is the point where overthinking can become its own cost. If you leave, do it deliberately instead of waiting for perfect certainty.',
+        'A measured exit plan matters more than squeezing the last bit of safety out of the numbers.'
+      ],
+      risky: [
+        'You can likely afford the move, but the safety margin is not large enough to ignore.',
+        'This is the common zone where people feel both capable and uneasy at the same time. That tension is real, not a failure.',
+        'The right choice may depend on whether a bonus, vest, or small burn reduction meaningfully changes your runway.'
+      ],
+      notyet: [
+        'The decision is still too dependent on the assumption that everything goes right.',
+        'That usually means the problem is not conviction. It is margin.',
+        'Use the calculator to find the smallest change that moves you from fragile to workable.'
+      ]
+    };
+
+    const whyDetails = [
+      `Strong quit signal if runway at planned spend is at least ${thresholds.strongRunway} months, current-spend runway is at least ${thresholds.strongCurrent} months, and near-term equity pressure is low.`,
+      `Possible but risky if runway at planned spend is at least ${thresholds.possibleRunway} months and current-spend runway is at least ${thresholds.possibleCurrent} months.`,
+      `Not yet if you fall below those thresholds or if vesting pressure is too close relative to the value at stake.`
+    ];
+
+    const signalStateClass = signalKey === 'strong' ? 'strong' : signalKey === 'risky' ? 'risky' : 'notyet';
+    const signalRiskBadge = signalKey === 'strong' ? 'low' : signalKey === 'risky' ? 'medium' : 'high';
 
     results.innerHTML = `
-      <h2>Your Results</h2>
+      <h2>Your Result</h2>
+      <section class="signal-panel ${signalStateClass}">
+        <div class="signal-label">Decision signal</div>
+        <h3 class="signal-name">${signalCopy[signalKey].label}</h3>
+        <p class="signal-short">${signalCopy[signalKey].short}</p>
+      </section>
+      <p class="signal-disclaimer">Directional only. This tool is meant to clarify tradeoffs, not make the decision for you.</p>
+
+      <ul class="insight-list">
+        <li>${insightBullets[0]}</li>
+        <li>${insightBullets[1]}</li>
+        <li>${insightBullets[2]}</li>
+      </ul>
+
       <div class="result-grid">
         <div class="stat">
           <div class="label">Runway at post-quit spend</div>
@@ -121,12 +230,35 @@
           <div class="value">${currency(equityCost)}</div>
         </div>
         <div class="stat">
-          <div class="label">Recommended decision</div>
-          <div class="value">${decision}</div>
+          <div class="label">Constraint flag</div>
+          <div class="value">${constraint}</div>
         </div>
       </div>
-      <p class="notice">Risk score: <span class="badge ${riskClass}">${risk}</span></p>
-      <p><strong>What to do next:</strong> Run two scenarios: (1) quit now and (2) quit after next vest. Keep the one with acceptable stress and at least 12 months runway.</p>
+
+      <div class="interpretation-box">
+        <h3>What this actually means</h3>
+        <p>${interpretationCopy[signalKey][0]}</p>
+        <p>${interpretationCopy[signalKey][1]}</p>
+        <p>${interpretationCopy[signalKey][2]}</p>
+      </div>
+
+      <details class="why-details">
+        <summary>Why this result?</summary>
+        <p>This is a transparent rule set. Edit the thresholds in <code>assets/calculator.js</code> if you want different sensitivity.</p>
+        <ul class="list">
+          <li>${whyDetails[0]}</li>
+          <li>${whyDetails[1]}</li>
+          <li>${whyDetails[2]}</li>
+        </ul>
+      </details>
+
+      <p class="notice">Result state: <span class="badge ${signalRiskBadge}">${signalCopy[signalKey].label}</span></p>
+      <p><strong>Next step:</strong> compare the current-spend and post-quit scenarios, then decide whether the margin is enough for you personally.</p>
+
+      <div class="results-actions">
+        <a class="btn btn-primary" href="#quit-calculator-form">Run your numbers again</a>
+        <a class="btn" href="articles/index.html">Read the guides</a>
+      </div>
     `;
 
     results.hidden = false;
@@ -135,8 +267,8 @@
     event('calculator_complete', {
       runwayLean,
       runwayCurrent,
-      decision,
-      risk
+      signal: signalCopy[signalKey].label,
+      constraint
     });
   });
 })();
