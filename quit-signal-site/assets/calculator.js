@@ -6,6 +6,8 @@
     return;
   }
 
+  const presetButtons = document.querySelectorAll('[data-preset]');
+
   const currency = (n) =>
     new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -44,6 +46,74 @@
     }
   };
 
+  const presets = {
+    baseline: {
+      savings: 120000,
+      spendNow: 9000,
+      spendQuit: 7000,
+      otherIncome: 3000,
+      severance: 0,
+      oneTime: 4000,
+      healthDelta: 1200,
+      breakIncome: 1500,
+      reemploymentMonths: 6,
+      unvestedEquity: 50000,
+      vestMonths: 2,
+      riskTolerance: 'Balanced'
+    },
+    bonus: {
+      savings: 180000,
+      spendNow: 12000,
+      spendQuit: 8500,
+      otherIncome: 2000,
+      severance: 40000,
+      oneTime: 5000,
+      healthDelta: 1500,
+      breakIncome: 0,
+      reemploymentMonths: 4,
+      unvestedEquity: 15000,
+      vestMonths: 1,
+      riskTolerance: 'Balanced'
+    },
+    rsu: {
+      savings: 250000,
+      spendNow: 15000,
+      spendQuit: 10000,
+      otherIncome: 4000,
+      severance: 0,
+      oneTime: 5000,
+      healthDelta: 1800,
+      breakIncome: 0,
+      reemploymentMonths: 6,
+      unvestedEquity: 90000,
+      vestMonths: 2,
+      riskTolerance: 'Balanced'
+    }
+  };
+
+  const applyPreset = (presetName) => {
+    const preset = presets[presetName];
+    if (!preset) {
+      return;
+    }
+
+    Object.entries(preset).forEach(([key, value]) => {
+      const field = form.elements[key];
+      if (field) {
+        field.value = value;
+      }
+    });
+  };
+
+  presetButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      applyPreset(button.dataset.preset);
+      event('calculator_preset', { preset: button.dataset.preset });
+      results.hidden = true;
+      form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     event('calculator_start');
@@ -73,6 +143,7 @@
 
     const equityCost = data.unvestedEquity;
     const equityShare = effectiveCash > 0 ? equityCost / effectiveCash : 1;
+    const searchPressure = data.reemploymentMonths > 0 && runwayLean < data.reemploymentMonths;
     const toleranceMap = {
       Conservative: {
         strongRunway: 21,
@@ -108,17 +179,19 @@
     // - Strong quit signal: comfortable runway, comfortable current-spend runway, and no near-term equity pressure.
     // - Possible but risky: runway exists, but the margin is thin or vesting/bonus timing still matters.
     // - Not yet: runway is too short to absorb the uncertainty.
-    const nearTermVestPressure = data.vestMonths <= thresholds.vestSoonMonths && equityShare >= thresholds.equityPressure;
+    const nearTermVestPressure = data.vestMonths > 0 && data.vestMonths <= thresholds.vestSoonMonths && equityShare >= thresholds.equityPressure;
     const strongSignal =
       runwayLean >= thresholds.strongRunway &&
       runwayCurrent >= thresholds.strongCurrent &&
       equityShare < thresholds.equityStrong &&
-      !nearTermVestPressure;
+      !nearTermVestPressure &&
+      !searchPressure;
 
     const possibleSignal =
       !strongSignal &&
       runwayLean >= thresholds.possibleRunway &&
-      runwayCurrent >= thresholds.possibleCurrent;
+      runwayCurrent >= thresholds.possibleCurrent &&
+      !searchPressure;
 
     const signalKey = strongSignal ? 'strong' : possibleSignal ? 'risky' : 'notyet';
 
@@ -146,6 +219,9 @@
       if (nearTermVestPressure) {
         return 'near-term vesting';
       }
+      if (searchPressure) {
+        return 'job search timeline';
+      }
       if (runwayLean < thresholds.possibleRunway) {
         return 'monthly burn';
       }
@@ -165,6 +241,22 @@
         ? `Cutting $1,000 a month would add about ${monthlyFlex.toFixed(1)} months of runway.`
         : 'Your planned break income almost covers the burn, so the decision is less about monthly cash flow.'
     ];
+
+    const changeLine = (() => {
+      if (constraint === 'job search timeline') {
+        return `Your expected re-employment timeline is ${data.reemploymentMonths || 0} months. That is longer than your current runway, so either your burn needs to come down or your safety buffer needs to go up.`;
+      }
+      if (constraint === 'near-term vesting') {
+        return `Waiting for the next vest is likely to matter here. If you can bridge the gap, compare the runway with and without that payout.`;
+      }
+      if (constraint === 'healthcare costs') {
+        return `Healthcare is materially affecting the answer. Reducing that delta would move the signal faster than small tweaks elsewhere.`;
+      }
+      if (constraint === 'monthly burn') {
+        return `Burn is the main lever. Small changes to housing, travel, or discretionary spend can move the signal faster than you might expect.`;
+      }
+      return `Additional liquid savings would improve the margin more than marginal changes to the current inputs.`;
+    })();
 
     const interpretationCopy = {
       strong: [
@@ -199,6 +291,7 @@
         <div class="signal-label">Decision signal</div>
         <h3 class="signal-name">${signalCopy[signalKey].label}</h3>
         <p class="signal-short">${signalCopy[signalKey].short}</p>
+        <p class="signal-long">${signalCopy[signalKey].long}</p>
       </section>
       <p class="signal-disclaimer">Directional only. This tool is meant to clarify tradeoffs, not make the decision for you.</p>
 
@@ -222,6 +315,10 @@
           <div class="value">${monthToDate(runwayLean)}</div>
         </div>
         <div class="stat">
+          <div class="label">Expected re-employment timeline</div>
+          <div class="value">${data.reemploymentMonths || 0} months</div>
+        </div>
+        <div class="stat">
           <div class="label">12-month spend cap</div>
           <div class="value">${currency(targetSpend12)}</div>
         </div>
@@ -240,6 +337,7 @@
         <p>${interpretationCopy[signalKey][0]}</p>
         <p>${interpretationCopy[signalKey][1]}</p>
         <p>${interpretationCopy[signalKey][2]}</p>
+        <p><strong>What would move this result:</strong> ${changeLine}</p>
       </div>
 
       <details class="why-details">

@@ -143,6 +143,76 @@ h3 {
   margin-top: 18px;
 }
 
+.preset-grid {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.preset-chip {
+  width: auto;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid #cfd8d2;
+  background: #f8faf8;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.preset-chip:hover {
+  background: #eef5f1;
+}
+
+.form-section {
+  border: 1px solid var(--line);
+  background: #fffefb;
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 14px;
+}
+
+.section-heading {
+  margin-bottom: 12px;
+}
+
+.section-heading h2 {
+  margin: 0 0 4px;
+  font-size: 1.2rem;
+}
+
+.section-heading p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.96rem;
+}
+
+.advanced-panel {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+}
+
+.advanced-panel summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.advanced-help {
+  margin: 10px 0 12px;
+  color: var(--muted);
+  font-size: 0.96rem;
+}
+
+.form-hint {
+  margin-top: 4px;
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
 .btn {
   display: inline-block;
   border: 1px solid var(--line);
@@ -386,6 +456,12 @@ button {
 .signal-short {
   color: var(--muted);
   margin: 0;
+  max-width: 70ch;
+}
+
+.signal-long {
+  color: var(--muted);
+  margin: 8px 0 0;
   max-width: 70ch;
 }
 

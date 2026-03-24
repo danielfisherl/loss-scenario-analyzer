@@ -36,29 +36,33 @@
     <article class="hero-card">
       <span class="kicker">Free Tool</span>
       <h1>Can I Afford to Quit My Tech Job?</h1>
-      <p class="lead">Built for high-earning tech workers who want more than a months-left answer. Add your numbers to see runway, risk, and whether waiting until the next vest or bonus meaningfully changes the call.</p>
+      <p class="lead">Built for high-earning tech workers who want more than a months-left answer. Add rough numbers to see runway, risk, and whether waiting for the next vest or bonus actually changes the call.</p>
+      <p class="lead">Takes about a minute if you know your monthly burn. Precision is useful, but it is not required to start.</p>
       <p class="lead">The output is a decision signal, not a prediction. It is meant to make the tradeoffs legible enough to act on.</p>
       <p class="disclaimer">Educational use only. Not financial, tax, or legal advice.</p>
     </article>
 
     <section class="section card">
       <form id="quit-calculator-form">
-        <div class="form-grid">
+        <div class="preset-grid" aria-label="Quick start presets">
+          <button class="preset-chip" type="button" data-preset="baseline">Baseline</button>
+          <button class="preset-chip" type="button" data-preset="bonus">Bonus Soon</button>
+          <button class="preset-chip" type="button" data-preset="rsu">RSU Wait</button>
+        </div>
+
+        <div class="form-section">
+          <div class="section-heading">
+            <h2>1. Money you have</h2>
+            <p>Start with the cash you can actually use.</p>
+          </div>
+          <div class="form-grid">
           <div>
             <label for="savings">Cash savings available ($)</label>
             <input id="savings" name="savings" type="number" value="120000" min="0" step="100" required />
           </div>
           <div>
-            <label for="spendNow">Monthly spending now ($)</label>
-            <input id="spendNow" name="spendNow" type="number" value="9000" min="0" step="100" required />
-          </div>
-          <div>
-            <label for="spendQuit">Monthly spending after quitting ($)</label>
-            <input id="spendQuit" name="spendQuit" type="number" value="7000" min="0" step="100" required />
-          </div>
-          <div>
             <label for="otherIncome">Other household monthly income ($)</label>
-            <input id="otherIncome" name="otherIncome" type="number" value="3000" min="0" step="100" />
+            <input id="otherIncome" name="otherIncome" type="number" value="3000" min="0" step="100" placeholder="Spouse, partner, rental, etc." />
           </div>
           <div>
             <label for="severance">Severance after tax ($)</label>
@@ -68,20 +72,44 @@
             <label for="oneTime">One-time quitting costs ($)</label>
             <input id="oneTime" name="oneTime" type="number" value="4000" min="0" step="100" />
           </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="section-heading">
+            <h2>2. What you spend each month</h2>
+            <p>Use your real current spending and a realistic post-quit version.</p>
+          </div>
+          <div class="form-grid">
+          <div>
+            <label for="spendNow">Monthly spending now ($)</label>
+            <input id="spendNow" name="spendNow" type="number" value="9000" min="0" step="100" required />
+          </div>
+          <div>
+            <label for="spendQuit">Monthly spending after quitting ($)</label>
+            <input id="spendQuit" name="spendQuit" type="number" value="7000" min="0" step="100" required />
+          </div>
           <div>
             <label for="healthDelta">Extra monthly healthcare cost ($)</label>
             <input id="healthDelta" name="healthDelta" type="number" value="1200" min="0" step="50" />
           </div>
+          </div>
+        </div>
+
+        <details class="advanced-panel">
+          <summary>Optional details: bonus, RSUs, and search timeline</summary>
+          <p class="advanced-help">These inputs make the result sharper, but they are optional. Leave them at zero if you do not know them yet.</p>
+          <div class="form-grid">
           <div>
-            <label for="breakIncome">Expected monthly break income ($)</label>
-            <input id="breakIncome" name="breakIncome" type="number" value="1500" min="0" step="100" />
+            <label for="breakIncome">Income you expect during the break ($)</label>
+            <input id="breakIncome" name="breakIncome" type="number" value="1500" min="0" step="100" placeholder="Freelance, consulting, side income" />
           </div>
           <div>
             <label for="reemploymentMonths">Months until likely re-employment</label>
             <input id="reemploymentMonths" name="reemploymentMonths" type="number" value="6" min="0" step="1" />
           </div>
           <div>
-            <label for="unvestedEquity">Unvested equity forfeited if you quit now ($)</label>
+            <label for="unvestedEquity">Unvested RSUs or bonus at risk ($)</label>
             <input id="unvestedEquity" name="unvestedEquity" type="number" value="50000" min="0" step="100" />
           </div>
           <div>
@@ -96,6 +124,11 @@
               <option>Aggressive</option>
             </select>
           </div>
+          </div>
+        </details>
+
+        <div class="form-hint">
+          Rough estimates are enough. The calculator is directional and is meant to show what actually moves the answer.
         </div>
 
         <div class="actions">
@@ -134,7 +167,7 @@
 
       <div class="notice">
         Related pages:
-        <a href="about-methodology.html">Methodology</a>,
+        <a href="about-methodology.html">About</a>,
         <a href="how-much-savings-to-quit-tech-job.html">Savings guide</a>,
         <a href="how-much-money-do-you-need-to-quit-your-job.html">How much money</a>,
         <a href="quit-before-rsu-vesting.html">RSU guide</a>,
