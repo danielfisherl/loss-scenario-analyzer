@@ -1,372 +1,385 @@
-(function () {
-  const form = document.getElementById('quit-calculator-form');
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('timeoff-calculator-form');
   const results = document.getElementById('results');
+  if (!form || !results) return;
 
-  if (!form || !results) {
-    return;
-  }
+  const el = (id) => document.getElementById(id);
+  const savingsEl = el('savings');
+  const oneTimeInflowEl = el('oneTimeInflow');
+  const monthlyLivingExpensesEl = el('monthlyLivingExpenses');
+  const healthcareCostEl = el('healthcareCost');
+  const monthlyIncomeDuringBreakEl = el('monthlyIncomeDuringBreak');
+  const useReducedSpendEl = el('useReducedSpend');
+  const reducedMonthlyLivingExpensesEl = el('reducedMonthlyLivingExpenses');
+  const reducedSpendBlock = el('reducedSpendBlock');
+  const breakLengthEl = el('breakLength');
+  const customMonthsWrap = el('customMonthsWrap');
+  const customBreakMonthsEl = el('customBreakMonths');
+  const emergencyBufferEl = el('emergencyBuffer');
+  const annualReturnEl = el('annualReturn');
+  const presetButtons = Array.from(document.querySelectorAll('.preset-chip'));
 
-  const presetButtons = document.querySelectorAll('[data-preset]');
-
-  const currency = (n) =>
-    new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 0
-    }).format(Number.isFinite(n) ? n : 0);
-
-  const formatMonths = (n) => {
-    if (!Number.isFinite(n) || n >= 99) {
-      return '99+ months';
-    }
-    return `${n.toFixed(1)} months`;
-  };
-
-  const monthToDate = (months) => {
-    if (!Number.isFinite(months) || months >= 99) {
-      return 'long-term';
-    }
-
-    const date = new Date();
-    date.setMonth(date.getMonth() + Math.max(0, Math.floor(months)));
-    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-  };
-
-  const safeNumber = (v) => {
-    const n = Number(v);
-    return Number.isFinite(n) ? n : 0;
-  };
-
-  const event = (name, data) => {
-    if (window.console && window.console.log) {
-      window.console.log('analytics-event', name, data || {});
-    }
-    if (typeof window.gtag === 'function') {
-      window.gtag('event', name, data || {});
-    }
-  };
-
-  const presets = {
-    baseline: {
-      savings: 120000,
-      spendNow: 9000,
-      spendQuit: 7000,
-      otherIncome: 3000,
-      severance: 0,
-      oneTime: 4000,
-      healthDelta: 1200,
-      breakIncome: 1500,
-      reemploymentMonths: 6,
-      unvestedEquity: 50000,
-      vestMonths: 2,
-      riskTolerance: 'Balanced'
-    },
-    bonus: {
-      savings: 180000,
-      spendNow: 12000,
-      spendQuit: 8500,
-      otherIncome: 2000,
-      severance: 40000,
-      oneTime: 5000,
-      healthDelta: 1500,
-      breakIncome: 0,
-      reemploymentMonths: 4,
-      unvestedEquity: 15000,
-      vestMonths: 1,
-      riskTolerance: 'Balanced'
-    },
-    rsu: {
-      savings: 250000,
-      spendNow: 15000,
-      spendQuit: 10000,
-      otherIncome: 4000,
-      severance: 0,
-      oneTime: 5000,
-      healthDelta: 1800,
-      breakIncome: 0,
-      reemploymentMonths: 6,
-      unvestedEquity: 90000,
-      vestMonths: 2,
-      riskTolerance: 'Balanced'
-    }
-  };
-
-  const applyPreset = (presetName) => {
-    const preset = presets[presetName];
-    if (!preset) {
-      return;
-    }
-
-    Object.entries(preset).forEach(([key, value]) => {
-      const field = form.elements[key];
-      if (field) {
-        field.value = value;
-      }
-    });
-  };
-
-  presetButtons.forEach((button) => {
-    button.addEventListener('click', () => {
-      applyPreset(button.dataset.preset);
-      event('calculator_preset', { preset: button.dataset.preset });
-      results.hidden = true;
-      form.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
+  const moneyFmt = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 0,
   });
 
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    event('calculator_start');
+  const pctFmt = new Intl.NumberFormat('en-US', {
+    style: 'percent',
+    maximumFractionDigits: 1,
+  });
 
-    const data = {
-      savings: safeNumber(form.savings.value),
-      spendNow: safeNumber(form.spendNow.value),
-      spendQuit: safeNumber(form.spendQuit.value),
-      otherIncome: safeNumber(form.otherIncome.value),
-      severance: safeNumber(form.severance.value),
-      oneTime: safeNumber(form.oneTime.value),
-      healthDelta: safeNumber(form.healthDelta.value),
-      breakIncome: safeNumber(form.breakIncome.value),
-      reemploymentMonths: safeNumber(form.reemploymentMonths.value),
-      unvestedEquity: safeNumber(form.unvestedEquity.value),
-      vestMonths: safeNumber(form.vestMonths.value),
-      riskTolerance: form.riskTolerance.value
-    };
+  function money(value) {
+    return moneyFmt.format(Number.isFinite(value) ? value : 0);
+  }
 
-    const effectiveCash = data.savings + data.severance - data.oneTime;
-    const leanBurn = data.spendQuit + data.healthDelta - data.otherIncome - data.breakIncome;
-    const currentBurn = data.spendNow + data.healthDelta - data.otherIncome - data.breakIncome;
+  function months(value) {
+    if (!Number.isFinite(value)) return '99+ months';
+    return `${value.toFixed(1)} months`;
+  }
 
-    const runwayLean = leanBurn <= 0 ? 99 : effectiveCash / leanBurn;
-    const runwayCurrent = currentBurn <= 0 ? 99 : effectiveCash / currentBurn;
-    const targetSpend12 = effectiveCash / 12 + data.otherIncome + data.breakIncome - data.healthDelta;
+  function track(name, payload = {}) {
+    if (typeof window.gtag === 'function') {
+      window.gtag('event', name, payload);
+    }
+  }
 
-    const equityCost = data.unvestedEquity;
-    const equityShare = effectiveCash > 0 ? equityCost / effectiveCash : 1;
-    const searchPressure = data.reemploymentMonths > 0 && runwayLean < data.reemploymentMonths;
-    const toleranceMap = {
-      Conservative: {
-        strongRunway: 21,
-        strongCurrent: 14,
-        possibleRunway: 11,
-        possibleCurrent: 6,
-        equityStrong: 0.1,
-        equityPressure: 0.18,
-        vestSoonMonths: 3
-      },
-      Balanced: {
-        strongRunway: 18,
-        strongCurrent: 12,
-        possibleRunway: 9,
-        possibleCurrent: 5,
-        equityStrong: 0.12,
-        equityPressure: 0.2,
-        vestSoonMonths: 3
-      },
-      Aggressive: {
-        strongRunway: 15,
-        strongCurrent: 10,
-        possibleRunway: 8,
-        possibleCurrent: 5,
-        equityStrong: 0.15,
-        equityPressure: 0.22,
-        vestSoonMonths: 2
-      }
-    };
-    const thresholds = toleranceMap[data.riskTolerance] || toleranceMap.Balanced;
+  function getBreakMonths() {
+    if (breakLengthEl.value === 'custom') {
+      return Math.max(1, Number(customBreakMonthsEl.value) || 1);
+    }
+    return Math.max(1, Number(breakLengthEl.value) || 12);
+  }
 
-    // Result-state rules are intentionally simple and editable:
-    // - Strong quit signal: comfortable runway, comfortable current-spend runway, and no near-term equity pressure.
-    // - Possible but risky: runway exists, but the margin is thin or vesting/bonus timing still matters.
-    // - Not yet: runway is too short to absorb the uncertainty.
-    const nearTermVestPressure = data.vestMonths > 0 && data.vestMonths <= thresholds.vestSoonMonths && equityShare >= thresholds.equityPressure;
-    const strongSignal =
-      runwayLean >= thresholds.strongRunway &&
-      runwayCurrent >= thresholds.strongCurrent &&
-      equityShare < thresholds.equityStrong &&
-      !nearTermVestPressure &&
-      !searchPressure;
+  function getMonthlyBurn() {
+    const standardSpend = Math.max(0, Number(monthlyLivingExpensesEl.value) || 0);
+    const reducedSpend = Math.max(0, Number(reducedMonthlyLivingExpensesEl.value) || 0);
+    return useReducedSpendEl.checked ? reducedSpend : standardSpend;
+  }
 
-    const possibleSignal =
-      !strongSignal &&
-      runwayLean >= thresholds.possibleRunway &&
-      runwayCurrent >= thresholds.possibleCurrent &&
-      !searchPressure;
+  function updateBreakUI() {
+    customMonthsWrap.hidden = breakLengthEl.value !== 'custom';
+    presetButtons.forEach((button) => {
+      button.classList.toggle('is-active', button.dataset.break === breakLengthEl.value);
+    });
+  }
 
-    const signalKey = strongSignal ? 'strong' : possibleSignal ? 'risky' : 'notyet';
+  function updateReducedSpendUI() {
+    reducedSpendBlock.hidden = !useReducedSpendEl.checked;
+  }
 
-    const signalCopy = {
-      strong: {
-        label: 'Strong quit signal',
-        short: 'Your numbers suggest you have enough room to leave without forcing a rushed decision.',
-        long: 'This does not guarantee the exit will feel easy, but it does mean the financial side is not doing the heavy lifting. The main question becomes timing: when you leave, what pace you want to search at, and how much margin you want to preserve.'
-      },
-      risky: {
-        label: 'Possible but risky',
-        short: 'You can probably make this work, but the margin is thin enough that timing still matters.',
-        long: 'This is the zone where people can afford the move but still feel uneasy about it. A bonus, vest, or a small expense change can move the answer. If you leave here, do it with a plan instead of a guess.'
-      },
-      notyet: {
+  function projectBalance(startBalance, monthlyCost, monthlyIncome, monthlyReturn, breakMonths) {
+    let balance = startBalance;
+    for (let i = 0; i < breakMonths; i += 1) {
+      balance = balance * (1 + monthlyReturn);
+      balance += monthlyIncome;
+      balance -= monthlyCost;
+    }
+    return balance;
+  }
+
+  function runwayUntilBuffer(startBalance, monthlyCost, monthlyIncome, monthlyReturn, bufferTarget) {
+    if (monthlyIncome + startBalance * monthlyReturn >= monthlyCost) {
+      return Infinity;
+    }
+
+    let balance = startBalance;
+    let monthsElapsed = 0;
+    const maxMonths = 600;
+
+    while (monthsElapsed < maxMonths && balance > bufferTarget) {
+      balance = balance * (1 + monthlyReturn);
+      balance += monthlyIncome;
+      balance -= monthlyCost;
+      monthsElapsed += 1;
+    }
+
+    return monthsElapsed;
+  }
+
+  function chooseState({ covered, monthlyShortfall, monthsAboveTarget, safeRunway }) {
+    if (!covered) {
+      return {
+        key: 'notyet',
         label: 'Not yet',
-        short: 'The current numbers leave too little slack to make the decision comfortably.',
-        long: 'The output is saying the exit is still too dependent on optimistic assumptions. That usually means the next move is to reduce burn, extend the timeline, or wait for a better timing window rather than trying to force certainty.'
-      }
+        short: 'The target break is longer than the safety margin your current plan supports.',
+        long:
+          'The break may still be possible, but this version of the plan is too close to the edge to treat as comfortably funded. Lower burn, more income during the break, or more savings would help.',
+      };
+    }
+
+    if (monthlyShortfall <= 0 || monthsAboveTarget >= 3 || safeRunway === Infinity) {
+      return {
+        key: 'strong',
+        label: 'Strong time-off signal',
+        short: 'Your break is likely covered with room to spare.',
+        long:
+          'The plan survives after preserving the buffer. That usually means the choice is more about timing and comfort with uncertainty than about whether the break is financially possible.',
+      };
+    }
+
+    return {
+      key: 'risky',
+      label: 'Possible but tight',
+      short: 'The break appears feasible, but the margin is thin.',
+      long:
+        'You can probably make the break work, but the numbers do not leave much slack. A small change in spending, healthcare, or timing could move the answer.',
     };
+  }
 
-    const monthsSaved = Math.max(0, runwayLean - runwayCurrent);
-    const monthlyFlex = leanBurn > 0 ? 1000 / leanBurn : 99;
-    const constraint = (() => {
-      if (nearTermVestPressure) {
-        return 'near-term vesting';
-      }
-      if (searchPressure) {
-        return 'job search timeline';
-      }
-      if (runwayLean < thresholds.possibleRunway) {
-        return 'monthly burn';
-      }
-      if (data.healthDelta > data.spendQuit * 0.25) {
-        return 'healthcare costs';
-      }
-      if (runwayCurrent < runwayLean && runwayLean >= thresholds.possibleRunway) {
-        return 'spend discipline';
-      }
-      return 'savings buffer';
-    })();
+  function buildInsights({
+    monthlyCost,
+    monthlyIncome,
+    monthlyShortfall,
+    useReducedSpend,
+    reducedSpendDelta,
+    bufferTarget,
+    breakMonths,
+    endingBalance,
+  }) {
+    const bullets = [];
 
-    const insightBullets = [
-      `Moving to your planned post-quit spend gives you about ${formatMonths(monthsSaved)} of extra runway versus staying at current spend.`,
-      `Your main constraint right now is ${constraint}.`,
-      leanBurn > 0
-        ? `Cutting $1,000 a month would add about ${monthlyFlex.toFixed(1)} months of runway.`
-        : 'Your planned break income almost covers the burn, so the decision is less about monthly cash flow.'
-    ];
+    if (monthlyShortfall > 0) {
+      bullets.push(
+        `Your net monthly burn is ${money(monthlyShortfall)}. Cutting ${money(1000)} from monthly spending would add about ${(1000 / monthlyShortfall).toFixed(1)} months of runway.`
+      );
+    } else {
+      bullets.push('Your monthly break income covers the planned monthly costs, so the break is not relying on cash alone.');
+    }
 
-    const changeLine = (() => {
-      if (constraint === 'job search timeline') {
-        return `Your expected re-employment timeline is ${data.reemploymentMonths || 0} months. That is longer than your current runway, so either your burn needs to come down or your safety buffer needs to go up.`;
-      }
-      if (constraint === 'near-term vesting') {
-        return `Waiting for the next vest is likely to matter here. If you can bridge the gap, compare the runway with and without that payout.`;
-      }
-      if (constraint === 'healthcare costs') {
-        return `Healthcare is materially affecting the answer. Reducing that delta would move the signal faster than small tweaks elsewhere.`;
-      }
-      if (constraint === 'monthly burn') {
-        return `Burn is the main lever. Small changes to housing, travel, or discretionary spend can move the signal faster than you might expect.`;
-      }
-      return `Additional liquid savings would improve the margin more than marginal changes to the current inputs.`;
-    })();
+    if (monthlyIncome > 0) {
+      bullets.push(
+        `Break income covers about ${pctFmt.format(monthlyIncome / Math.max(monthlyCost, 1))} of your monthly break costs.`
+      );
+    } else {
+      bullets.push('You are not assuming any income during the break, so savings has to do all the work.');
+    }
 
-    const interpretationCopy = {
-      strong: [
-        'You are trading money for time, but the gap is wide enough that the decision is mostly about preference and timing.',
-        'This is the point where overthinking can become its own cost. If you leave, do it deliberately instead of waiting for perfect certainty.',
-        'A measured exit plan matters more than squeezing the last bit of safety out of the numbers.'
-      ],
-      risky: [
-        'You can likely afford the move, but the safety margin is not large enough to ignore.',
-        'This is the common zone where people feel both capable and uneasy at the same time. That tension is real, not a failure.',
-        'The right choice may depend on whether a bonus, vest, or small burn reduction meaningfully changes your runway.'
-      ],
-      notyet: [
-        'The decision is still too dependent on the assumption that everything goes right.',
-        'That usually means the problem is not conviction. It is margin.',
-        'Use the calculator to find the smallest change that moves you from fragile to workable.'
-      ]
-    };
+    if (useReducedSpend && reducedSpendDelta > 0) {
+      bullets.push(
+        `The reduced-spend scenario lowers monthly outflow by ${money(reducedSpendDelta)}, which gives the break more room.`
+      );
+    } else {
+      const bufferMonths = bufferTarget / Math.max(monthlyCost, 1);
+      bullets.push(
+        `Your emergency buffer reserves about ${bufferMonths.toFixed(1)} months of living costs before the break budget is fully used.`
+      );
+    }
 
-    const whyDetails = [
-      `Strong quit signal if runway at planned spend is at least ${thresholds.strongRunway} months, current-spend runway is at least ${thresholds.strongCurrent} months, and near-term equity pressure is low.`,
-      `Possible but risky if runway at planned spend is at least ${thresholds.possibleRunway} months and current-spend runway is at least ${thresholds.possibleCurrent} months.`,
-      `Not yet if you fall below those thresholds or if vesting pressure is too close relative to the value at stake.`
-    ];
+    if (endingBalance > bufferTarget) {
+      bullets.push(
+        `After the target break, you still have about ${((endingBalance - bufferTarget) / Math.max(monthlyCost, 1)).toFixed(1)} months of cushion beyond the reserved buffer.`
+      );
+    }
 
-    const signalStateClass = signalKey === 'strong' ? 'strong' : signalKey === 'risky' ? 'risky' : 'notyet';
-    const signalRiskBadge = signalKey === 'strong' ? 'low' : signalKey === 'risky' ? 'medium' : 'high';
+    return bullets.slice(0, 3);
+  }
 
+  function renderResult({
+    resultState,
+    breakMonths,
+    startBalance,
+    monthlyCost,
+    monthlyIncome,
+    monthlyShortfall,
+    bufferTarget,
+    endingBalance,
+    safeRunway,
+    annualReturn,
+    useReducedSpend,
+    reducedSpendDelta,
+  }) {
+    const covered = endingBalance >= bufferTarget;
+    const monthsAboveTarget = (endingBalance - bufferTarget) / Math.max(monthlyCost, 1);
+    const insights = buildInsights({
+      monthlyCost,
+      monthlyIncome,
+      monthlyShortfall,
+      useReducedSpend,
+      reducedSpendDelta,
+      bufferTarget,
+      breakMonths,
+      endingBalance,
+    });
+
+    const statusClass = resultState.key;
+    const direction = monthlyShortfall > 0 ? 'shortfall' : 'surplus';
+    const runwayText = safeRunway === Infinity ? '99+ months' : months(safeRunway);
+    const safetyMarginText = months(Math.max(monthsAboveTarget, 0));
+    const endingBalanceText = money(Math.max(endingBalance, 0));
+    const shortfallText =
+      monthlyShortfall > 0
+        ? `${money(monthlyShortfall)} monthly shortfall`
+        : `${money(Math.abs(monthlyShortfall))} monthly surplus`;
+
+    const interpretation = covered
+      ? resultState.key === 'strong'
+        ? [
+            'The break is financially workable after preserving the buffer.',
+            'At this point the decision is mostly about timing, preference, and how much margin you want to keep when you return.',
+          ]
+        : [
+            'The break looks possible, but the plan is still close enough to the edge that you should pay attention to the variables that move the answer.',
+            'A small reduction in spending or a small increase in income during the break can matter here.',
+          ]
+      : [
+          'The break is not fully funded once the buffer is preserved.',
+          'That usually means the next step is to lower burn, wait for more cash, or shorten the break length.',
+        ];
+
+    results.hidden = false;
     results.innerHTML = `
-      <h2>Your Result</h2>
-      <section class="signal-panel ${signalStateClass}">
-        <div class="signal-label">Decision signal</div>
-        <h3 class="signal-name">${signalCopy[signalKey].label}</h3>
-        <p class="signal-short">${signalCopy[signalKey].short}</p>
-        <p class="signal-long">${signalCopy[signalKey].long}</p>
+      <section class="signal-panel ${statusClass}">
+        <div class="signal-label">Result</div>
+        <h2 class="signal-name">${resultState.label}</h2>
+        <p class="signal-short">${resultState.short}</p>
+        <p class="signal-long">${resultState.long}</p>
+        <p class="signal-disclaimer">Directional only. This tool simplifies taxes, inflation, market volatility, and real-life surprises.</p>
       </section>
-      <p class="signal-disclaimer">Directional only. This tool is meant to clarify tradeoffs, not make the decision for you.</p>
+
+      <section class="interpretation-box">
+        <span class="kicker">What this means</span>
+        <h3>What this actually means</h3>
+        <p>${interpretation[0]}</p>
+        <p>${interpretation[1]}</p>
+      </section>
 
       <ul class="insight-list">
-        <li>${insightBullets[0]}</li>
-        <li>${insightBullets[1]}</li>
-        <li>${insightBullets[2]}</li>
+        ${insights.map((item) => `<li>${item}</li>`).join('')}
       </ul>
 
       <div class="result-grid">
         <div class="stat">
-          <div class="label">Runway at post-quit spend</div>
-          <div class="value">${formatMonths(runwayLean)}</div>
+          <div class="label">Estimated runway</div>
+          <div class="value">${runwayText}</div>
+          <p class="form-hint">Runway is measured against the reserve you chose to keep.</p>
         </div>
         <div class="stat">
-          <div class="label">Runway at current spend</div>
-          <div class="value">${formatMonths(runwayCurrent)}</div>
+          <div class="label">Target break covered?</div>
+          <div class="value">${covered ? 'Yes' : 'No'}</div>
+          <p class="form-hint">Target break: ${breakMonths} month${breakMonths === 1 ? '' : 's'}.</p>
         </div>
         <div class="stat">
-          <div class="label">Projected runway end</div>
-          <div class="value">${monthToDate(runwayLean)}</div>
+          <div class="label">Ending savings after break</div>
+          <div class="value">${endingBalanceText}</div>
+          <p class="form-hint">${covered ? 'Above the buffer target.' : 'Below the buffer target.'}</p>
         </div>
         <div class="stat">
-          <div class="label">Expected re-employment timeline</div>
-          <div class="value">${data.reemploymentMonths || 0} months</div>
+          <div class="label">Monthly ${direction}</div>
+          <div class="value">${shortfallText}</div>
+          <p class="form-hint">Living costs, healthcare, and break income all feed into this number.</p>
         </div>
         <div class="stat">
-          <div class="label">12-month spend cap</div>
-          <div class="value">${currency(targetSpend12)}</div>
+          <div class="label">Safety margin</div>
+          <div class="value">${safetyMarginText}</div>
+          <p class="form-hint">${covered ? 'Extra room beyond the target break.' : 'Negative means the break falls short of the buffer.'}</p>
         </div>
         <div class="stat">
-          <div class="label">Unvested equity tradeoff</div>
-          <div class="value">${currency(equityCost)}</div>
+          <div class="label">Emergency buffer impact</div>
+          <div class="value">${money(bufferTarget)}</div>
+          <p class="form-hint">A reserve of ${money(bufferTarget)} is being held back before the break is treated as safe.</p>
         </div>
-        <div class="stat">
-          <div class="label">Constraint flag</div>
-          <div class="value">${constraint}</div>
-        </div>
-      </div>
-
-      <div class="interpretation-box">
-        <h3>What this actually means</h3>
-        <p>${interpretationCopy[signalKey][0]}</p>
-        <p>${interpretationCopy[signalKey][1]}</p>
-        <p>${interpretationCopy[signalKey][2]}</p>
-        <p><strong>What would move this result:</strong> ${changeLine}</p>
       </div>
 
       <details class="why-details">
         <summary>Why this result?</summary>
-        <p>This is a transparent rule set. Edit the thresholds in <code>assets/calculator.js</code> if you want different sensitivity.</p>
         <ul class="list">
-          <li>${whyDetails[0]}</li>
-          <li>${whyDetails[1]}</li>
-          <li>${whyDetails[2]}</li>
+          <li>Starting balance: ${money(startBalance)}</li>
+          <li>Monthly break cost used: ${money(monthlyCost)}</li>
+          <li>Income during break: ${money(monthlyIncome)}</li>
+          <li>Annual return assumption: ${pctFmt.format(annualReturn / 100)}</li>
+          <li>Break length modeled: ${breakMonths} month${breakMonths === 1 ? '' : 's'}</li>
+          <li>Buffer reserved: ${money(bufferTarget)}</li>
         </ul>
       </details>
 
-      <p class="notice">Result state: <span class="badge ${signalRiskBadge}">${signalCopy[signalKey].label}</span></p>
-      <p><strong>Next step:</strong> compare the current-spend and post-quit scenarios, then decide whether the margin is enough for you personally.</p>
-
       <div class="results-actions">
-        <a class="btn btn-primary" href="#quit-calculator-form">Run your numbers again</a>
-        <a class="btn" href="articles/index.html">Read the guides</a>
+        <a class="btn btn-primary" href="calculator.html">Recalculate</a>
+        <a class="btn" href="articles/index.html">Read related guides</a>
       </div>
     `;
 
-    results.hidden = false;
-    results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    track('calculator_complete', {
+      result_state: resultState.key,
+      break_months: breakMonths,
+      safe_runway_months: Number.isFinite(safeRunway) ? safeRunway : 999,
+    });
+  }
 
-    event('calculator_complete', {
-      runwayLean,
-      runwayCurrent,
-      signal: signalCopy[signalKey].label,
-      constraint
+  presetButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      breakLengthEl.value = button.dataset.break;
+      updateBreakUI();
+      if (button.dataset.break === 'custom') {
+        customBreakMonthsEl.focus();
+      }
     });
   });
-})();
+
+  breakLengthEl.addEventListener('change', updateBreakUI);
+  useReducedSpendEl.addEventListener('change', updateReducedSpendUI);
+
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    track('calculator_start');
+
+    const savings = Math.max(0, Number(savingsEl.value) || 0);
+    const oneTimeInflow = Math.max(0, Number(oneTimeInflowEl.value) || 0);
+    const monthlyLivingExpenses = Math.max(0, Number(monthlyLivingExpensesEl.value) || 0);
+    const healthcareCost = Math.max(0, Number(healthcareCostEl.value) || 0);
+    const monthlyIncomeDuringBreak = Math.max(0, Number(monthlyIncomeDuringBreakEl.value) || 0);
+    const annualReturn = Math.max(0, Number(annualReturnEl.value) || 0);
+    const monthlyReturn = annualReturn / 100 / 12;
+    const breakMonths = getBreakMonths();
+    const monthlyBurn = getMonthlyBurn();
+    const monthlyCost = monthlyBurn + healthcareCost;
+    const monthlyShortfall = monthlyCost - monthlyIncomeDuringBreak;
+    const reducedSpend = Math.max(0, Number(reducedMonthlyLivingExpensesEl.value) || 0);
+    const reducedSpendDelta = useReducedSpendEl.checked
+      ? Math.max(0, monthlyLivingExpenses - reducedSpend)
+      : 0;
+    const bufferTarget = Math.max(0, Number(emergencyBufferEl.value) || 0) || monthlyCost * 3;
+    const startBalance = savings + oneTimeInflow;
+    const endingBalance = projectBalance(
+      startBalance,
+      monthlyCost,
+      monthlyIncomeDuringBreak,
+      monthlyReturn,
+      breakMonths
+    );
+    const safeRunway = runwayUntilBuffer(
+      startBalance,
+      monthlyCost,
+      monthlyIncomeDuringBreak,
+      monthlyReturn,
+      bufferTarget
+    );
+    const covered = endingBalance >= bufferTarget;
+    const monthsAboveTarget = (endingBalance - bufferTarget) / Math.max(monthlyCost, 1);
+    const resultState = chooseState({
+      covered,
+      monthlyShortfall,
+      monthsAboveTarget,
+      safeRunway,
+    });
+
+    renderResult({
+      resultState,
+      breakMonths,
+      startBalance,
+      monthlyCost,
+      monthlyIncome: monthlyIncomeDuringBreak,
+      monthlyShortfall,
+      bufferTarget,
+      endingBalance,
+      safeRunway,
+      annualReturn,
+      useReducedSpend: useReducedSpendEl.checked,
+      reducedSpendDelta,
+    });
+  });
+
+  updateBreakUI();
+  updateReducedSpendUI();
+});

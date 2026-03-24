@@ -164,6 +164,12 @@ h3 {
   background: #eef5f1;
 }
 
+.preset-chip.is-active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
 .form-section {
   border: 1px solid var(--line);
   background: #fffefb;
@@ -211,6 +217,18 @@ h3 {
   margin-top: 4px;
   font-size: 0.95rem;
   color: var(--muted);
+}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.toggle-row input {
+  width: auto;
+  margin: 0;
 }
 
 .btn {
