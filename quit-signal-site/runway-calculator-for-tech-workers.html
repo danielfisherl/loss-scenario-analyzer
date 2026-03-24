@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Runway Calculator for Tech Workers | QuitSignal</title>
+  <meta name="description" content="Use this runway calculator framework to estimate how long your savings last before quitting a tech job." />
+  <meta name="google-site-verification" content="ATL7WBlsLVhYbYMvm219HI0vKNjLWPbxOhCevAr54M" />
+  <meta property="og:title" content="Runway Calculator for Tech Workers" />
+  <meta property="og:description" content="A practical framework for estimating runway before quitting." />
+  <meta property="og:type" content="article" />
+  <link rel="stylesheet" href="assets/styles.css" />
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-5RQ72BPTV1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-5RQ72BPTV1');
+  </script>
+</head>
+<body>
+  <header>
+    <div class="container nav">
+      <a class="brand" href="index.html">Quit<span>Signal</span></a>
+      <nav class="nav-links" aria-label="Main navigation">
+        <a href="calculator.html">Calculator</a>
+        <a href="how-much-savings-to-quit-tech-job.html">Savings Guide</a>
+        <a href="quit-before-rsu-vesting.html">RSU Guide</a>
+        <a href="about-methodology.html">Methodology</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container section article">
+    <article class="card">
+      <span class="kicker">Runway Guide</span>
+      <h1>Runway Calculator for Tech Workers</h1>
+      <p>A runway calculator answers one question: how long can you live on your savings before you need income again? For tech workers, that answer is usually more useful than raw salary or total comp.</p>
+
+      <h2>What Runway Means</h2>
+      <p>Runway is your savings divided by your net monthly burn after accounting for healthcare, household income, and any planned break income.</p>
+
+      <h2>What To Include</h2>
+      <ul class="list">
+        <li>Cash savings</li>
+        <li>Severance after tax</li>
+        <li>Monthly spending after quitting</li>
+        <li>Other household income</li>
+        <li>Healthcare delta</li>
+        <li>One-time quitting costs</li>
+      </ul>
+
+      <h2>What To Ignore</h2>
+      <ul class="list">
+        <li>Gross salary you no longer receive</li>
+        <li>Unrealized future raises</li>
+        <li>RSUs you have not vested yet</li>
+      </ul>
+
+      <div class="notice">Use the calculator to turn this framework into your actual number.</div>
+
+      <p><a class="btn btn-primary" href="calculator.html">Run the Quit Calculator</a></p>
+    </article>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>© <span id="year"></span> QuitSignal. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
