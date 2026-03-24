@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>How QuitSignal Estimates Runway | Methodology</title>
+  <meta name="description" content="See how QuitSignal estimates runway, quit timing, RSU tradeoffs, and healthcare costs for tech workers." />
+  <meta name="google-site-verification" content="ATL7WBlsLVhYbYMvm219HI0vVKNjLWPbxOhCevAr54M" />
+  <meta property="og:title" content="How QuitSignal Estimates Runway" />
+  <meta property="og:description" content="A plain-language methodology page for the QuitSignal calculator." />
+  <meta property="og:type" content="article" />
+  <link rel="stylesheet" href="assets/styles.css" />
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-5RQ72BPTV1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-5RQ72BPTV1');
+  </script>
+</head>
+<body>
+  <header>
+    <div class="container nav">
+      <a class="brand" href="index.html">Quit<span>Signal</span></a>
+      <nav class="nav-links" aria-label="Main navigation">
+        <a href="calculator.html">Calculator</a>
+        <a href="how-much-savings-to-quit-tech-job.html">Savings Guide</a>
+        <a href="quit-before-rsu-vesting.html">RSU Guide</a>
+        <a href="about-methodology.html" aria-current="page">Methodology</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container section article">
+    <article class="card">
+      <span class="kicker">Methodology</span>
+      <h1>How QuitSignal Estimates Runway</h1>
+      <p>QuitSignal is built for high-income tech workers who want a fast, practical way to compare quitting now versus waiting.</p>
+
+      <h2>What The Calculator Measures</h2>
+      <ul class="list">
+        <li>Cash runway after quitting</li>
+        <li>Current-spend runway if you do not cut costs</li>
+        <li>Healthcare cost delta after leaving employer coverage</li>
+        <li>Near-term RSU or bonus opportunity cost</li>
+        <li>A simple risk label: low, medium, or high</li>
+      </ul>
+
+      <h2>Core Assumptions</h2>
+      <p>The calculator uses your cash savings, severance, one-time quitting costs, monthly spend, other household income, and expected break income. It is designed to show directional decision support, not precise financial planning.</p>
+
+      <h2>How The Decision Works</h2>
+      <p>If post-quit runway is strong, risk stays lower. If runway is short, or if healthcare costs and equity tradeoffs are large, the tool recommends waiting or reducing spend first.</p>
+
+      <h2>Why This Exists</h2>
+      <p>Most quit decisions are made with incomplete math. This site tries to make the tradeoff explicit so people can choose with more clarity and less guesswork.</p>
+
+      <div class="notice">Use the calculator to run your own scenario, then compare quitting now versus waiting for the next vest or bonus.</div>
+
+      <p><a class="btn btn-primary" href="calculator.html">Run the Calculator</a></p>
+    </article>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>© <span id="year"></span> QuitSignal. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
